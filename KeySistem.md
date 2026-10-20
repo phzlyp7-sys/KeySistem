@@ -1,7 +1,7 @@
 -- language: Luau, target: Roblox MOBILE
--- Key Sistem 7zK — v3.0 (cyber glass + efeitos)
+-- Key Sistem 7zK — v3.1 (Novo Domínio)
 
-local API_URL     = "https://obtendo-key.7zk.workers.dev"
+local API_URL     = "https://get-key.iphz7.workers.dev"
 local URL_FREE    = "https://raw.githubusercontent.com/phzlyp7-sys/7Zk-FREE/refs/heads/main/FREE.md"
 local URL_PREMIUM = "https://raw.githubusercontent.com/phzlyp7-sys/7zK-PREMIUM/refs/heads/main/Premium.md"
 
@@ -701,7 +701,7 @@ local gui, card, screen1, screen2, tb, tbs,
 local keyValue = ""
 local tentativas = 0
 local MAX_TENTATIVAS = 5
-local KICK_MSG = "https://obtendo-key.7zk.workers.dev/request — pegue sua key válida"
+local KICK_MSG = "https://get-key.iphz7.workers.dev/request — pegue sua key válida"
 local validando = false
 
 --=====================================================================

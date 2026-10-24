@@ -1,6 +1,3 @@
--- language: Luau, target: Roblox MOBILE
--- Key Sistem 7zK — v3.4 (Loading Ajustado)
-
 local API_URL     = "https://get-key.iphz7.workers.dev"
 local URL_FREE    = "https://raw.githubusercontent.com/phzlyp7-sys/7Zk-FREE/refs/heads/main/FREE.md"
 local URL_PREMIUM = "https://raw.githubusercontent.com/phzlyp7-sys/7zK-PREMIUM/refs/heads/main/Premium.md"

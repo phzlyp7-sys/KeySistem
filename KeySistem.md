@@ -1,5 +1,5 @@
 -- language: Luau, target: Roblox MOBILE
--- Key Sistem 7zK — v3.1 (Novo Domínio)
+-- Key Sistem 7zK — v3.4 (Loading Ajustado)
 
 local API_URL     = "https://get-key.iphz7.workers.dev"
 local URL_FREE    = "https://raw.githubusercontent.com/phzlyp7-sys/7Zk-FREE/refs/heads/main/FREE.md"
@@ -127,7 +127,168 @@ local function httpGetComTimeout(url, timeout)
 end
 
 --=====================================================================
--- UI
+-- TELA DE CARREGAMENTO (MAIS LARGA E PRA CIMA)
+--=====================================================================
+local function criarLoadingScreen()
+    local pg = LocalPlayer:WaitForChild("PlayerGui")
+
+    local loadGui = Instance.new("ScreenGui")
+    loadGui.Name = "7zK_Loading"
+    loadGui.ResetOnSpawn = false
+    loadGui.DisplayOrder = 99999
+    loadGui.IgnoreGuiInset = true
+    loadGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    loadGui.Parent = pg
+
+    -- Overlay escuro
+    local dim = Instance.new("Frame", loadGui)
+    dim.Size = UDim2.new(1, 0, 1, 0)
+    dim.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    dim.BackgroundTransparency = 0.4
+    dim.BorderSizePixel = 0
+    dim.ZIndex = 1
+
+    -- Quadrado central (Agora 400x200 e mais pra cima)
+    local card = Instance.new("Frame", loadGui)
+    card.Size = UDim2.new(0, 400, 0, 200)
+    card.Position = UDim2.new(0.5, -200, 0.5, -130) -- Subiu 30px
+    card.BackgroundColor3 = C_CARD
+    card.BackgroundTransparency = 0.05
+    card.BorderSizePixel = 0
+    card.ZIndex = 2
+    card.ClipsDescendants = true
+
+    local cc = Instance.new("UICorner", card)
+    cc.CornerRadius = UDim.new(0, 16)
+
+    local cs = Instance.new("UIStroke", card)
+    cs.Color = C_NEON
+    cs.Thickness = 1.5
+    cs.Transparency = 0.2
+
+    -- Grade de fundo
+    local grid = Instance.new("Frame", card)
+    grid.Size = UDim2.new(1, 0, 1, 0)
+    grid.BackgroundTransparency = 1
+    grid.ZIndex = 3
+
+    for i = 0, 10 do
+        local line = Instance.new("Frame", grid)
+        line.Size = UDim2.new(1, 0, 0, 1)
+        line.Position = UDim2.new(0, 0, 0, i * 20)
+        line.BackgroundColor3 = C_NEON
+        line.BackgroundTransparency = 0.92
+        line.BorderSizePixel = 0
+    end
+    for i = 0, 20 do
+        local line = Instance.new("Frame", grid)
+        line.Size = UDim2.new(0, 1, 1, 0)
+        line.Position = UDim2.new(0, i * 20, 0, 0)
+        line.BackgroundColor3 = C_NEON
+        line.BackgroundTransparency = 0.92
+        line.BorderSizePixel = 0
+    end
+
+    -- Partículas flutuantes
+    local particleLayer = Instance.new("Frame", card)
+    particleLayer.Size = UDim2.new(1, 0, 1, 0)
+    particleLayer.BackgroundTransparency = 1
+    particleLayer.ZIndex = 4
+
+    for i = 1, 16 do
+        local p = Instance.new("Frame", particleLayer)
+        local sz = math.random(2, 5)
+        p.Size = UDim2.new(0, sz, 0, sz)
+        p.Position = UDim2.new(math.random(), 0, math.random(), 0)
+        p.BackgroundColor3 = C_NEON
+        p.BackgroundTransparency = math.random(60, 85) / 100
+        p.BorderSizePixel = 0
+        local pc = Instance.new("UICorner", p)
+        pc.CornerRadius = UDim.new(1, 0)
+
+        task.spawn(function()
+            while p.Parent do
+                local dur = math.random(150, 350) / 100
+                local targetY = math.random(-20, 120) / 100
+                TweenService:Create(p, TweenInfo.new(dur, Enum.EasingStyle.Sine), {
+                    Position = UDim2.new(p.Position.X.Scale, 0, targetY, 0)
+                }):Play()
+                task.wait(dur)
+            end
+        end)
+    end
+
+    -- Logo
+    local logo = Instance.new("TextLabel", card)
+    logo.Size = UDim2.new(1, 0, 0, 40)
+    logo.Position = UDim2.new(0, 0, 0, 30)
+    logo.BackgroundTransparency = 1
+    logo.RichText = true
+    logo.Text = '<font color="#D8F5E6">7</font><font color="#00FF88">z</font><font color="#D8F5E6">K</font>'
+    logo.TextSize = 32
+    logo.Font = Enum.Font.GothamBold
+    logo.TextXAlignment = Enum.TextXAlignment.Center
+    logo.ZIndex = 10
+
+    -- Subtítulo
+    local sub = Instance.new("TextLabel", card)
+    sub.Size = UDim2.new(1, 0, 0, 20)
+    sub.Position = UDim2.new(0, 0, 0, 70)
+    sub.BackgroundTransparency = 1
+    sub.Text = "C A R R E G A N D O   S I S T E M A"
+    sub.TextColor3 = C_MUTED
+    sub.TextSize = 10
+    sub.Font = Enum.Font.Code
+    sub.TextXAlignment = Enum.TextXAlignment.Center
+    sub.ZIndex = 10
+
+    -- Barra de fundo
+    local barBg = Instance.new("Frame", card)
+    barBg.Size = UDim2.new(1, -60, 0, 6)
+    barBg.Position = UDim2.new(0, 30, 0, 120)
+    barBg.BackgroundColor3 = C_INPUT
+    barBg.BorderSizePixel = 0
+    barBg.ZIndex = 10
+
+    local bbc = Instance.new("UICorner", barBg)
+    bbc.CornerRadius = UDim.new(1, 0)
+
+    local bbs = Instance.new("UIStroke", barBg)
+    bbs.Color = C_STROKE
+    bbs.Thickness = 1
+
+    -- Barra de preenchimento
+    local barFill = Instance.new("Frame", barBg)
+    barFill.Size = UDim2.new(0, 0, 1, 0)
+    barFill.BackgroundColor3 = C_NEON
+    barFill.BorderSizePixel = 0
+    barFill.ZIndex = 11
+
+    local bfc = Instance.new("UICorner", barFill)
+    bfc.CornerRadius = UDim.new(1, 0)
+
+    local bfGlow = Instance.new("UIStroke", barFill)
+    bfGlow.Color = C_NEON
+    bfGlow.Thickness = 3
+    bfGlow.Transparency = 0.7
+
+    -- Porcentagem
+    local pct = Instance.new("TextLabel", card)
+    pct.Size = UDim2.new(1, 0, 0, 18)
+    pct.Position = UDim2.new(0, 0, 0, 138)
+    pct.BackgroundTransparency = 1
+    pct.Text = "0%"
+    pct.TextColor3 = C_NEON
+    pct.TextSize = 12
+    pct.Font = Enum.Font.Code
+    pct.TextXAlignment = Enum.TextXAlignment.Center
+    pct.ZIndex = 10
+
+    return loadGui, barFill, pct, card, logo, sub
+end
+
+--=====================================================================
+-- UI DO KEY SYSTEM
 --=====================================================================
 local function criarCard()
     local pg = LocalPlayer:WaitForChild("PlayerGui")
@@ -234,7 +395,6 @@ local function criarCard()
     local tgc = Instance.new("UICorner", topGlow)
     tgc.CornerRadius = UDim.new(1, 0)
 
-    -- glow pulsante no topo
     task.spawn(function()
         while card.Parent do
             TweenService:Create(topGlow, TweenInfo.new(1.8, Enum.EasingStyle.Sine), {
@@ -260,7 +420,6 @@ local function criarCard()
     glowBg.SliceCenter = Rect.new(24, 24, 276, 276)
     glowBg.ZIndex = 11
 
-    -- SCAN LINE
     local scan = Instance.new("Frame", card)
     scan.Size = UDim2.new(1, -20, 0, 2)
     scan.Position = UDim2.new(0, 10, 0, -10)
@@ -286,7 +445,6 @@ local function criarCard()
         end
     end)
 
-    -- CANTOS HUD
     local function hudCorner(pos, size)
         local c = Instance.new("Frame", card)
         c.Size = size
@@ -305,7 +463,6 @@ local function criarCard()
     hudCorner(UDim2.new(1, -24, 1, -12), UDim2.new(0, 14, 0, 2))
     hudCorner(UDim2.new(1, -12, 1, -24), UDim2.new(0, 2, 0, 14))
 
-    -- HEADER
     local logo = Instance.new("Frame", card)
     logo.Size = UDim2.new(0, 70, 0, 22)
     logo.Position = UDim2.new(0, 26, 0, 24)
@@ -651,39 +808,6 @@ local function criarCard()
         TweenService:Create(bos, TweenInfo.new(0.12), {Color = C_STROKE_HI}):Play()
     end)
 
-    -- FADE IN
-    local fadeAll = { card, divider, screen1, subtitle, btnFree, btnKey, keySub }
-    for _, o in ipairs(fadeAll) do
-        if o:IsA("TextLabel") or o:IsA("TextButton") or o:IsA("TextBox") then
-            o.TextTransparency = 1
-        end
-        if o:IsA("Frame") or o:IsA("TextButton") or o:IsA("TextBox") then
-            o.BackgroundTransparency = 1
-        end
-    end
-    tbs.Transparency = 1
-    cs.Transparency = 1
-    bos.Transparency = 1
-    bfs.Transparency = 1
-    bvs2.Transparency = 1
-    dot.BackgroundTransparency = 1
-    dotShadow.Transparency = 1
-
-    local info = TweenInfo.new(0.35, Enum.EasingStyle.Quart, Enum.EasingDirection.Out)
-    for _, o in ipairs(fadeAll) do
-        if o:IsA("TextLabel") or o:IsA("TextButton") or o:IsA("TextBox") then
-            TweenService:Create(o, info, {TextTransparency = 0}):Play()
-        end
-    end
-    TweenService:Create(card, info, {BackgroundTransparency = 0.05}):Play()
-    TweenService:Create(btnFree, info, {BackgroundTransparency = 0}):Play()
-    TweenService:Create(btnKey, info, {BackgroundTransparency = 0}):Play()
-    TweenService:Create(divider, info, {BackgroundTransparency = 0}):Play()
-    TweenService:Create(cs, info, {Transparency = 0.15}):Play()
-    TweenService:Create(bfs, info, {Transparency = 0}):Play()
-    TweenService:Create(dot, info, {BackgroundTransparency = 0}):Play()
-    TweenService:Create(dotShadow, info, {Transparency = 0.85}):Play()
-
     playOpenSound()
 
     return gui, card, screen1, screen2, tb, tbs, btnFree, btnKey,
@@ -691,6 +815,51 @@ local function criarCard()
 end
 
 --=====================================================================
+-- BOOT: TELA DE LOADING -> CARD DE KEY
+--=====================================================================
+local loadGui, barFill, pct, center, logoLbl, subLbl = criarLoadingScreen()
+playOpenSound()
+
+-- Animação da barra (4.2s total)
+local totalTime = 4.2
+local startT = tick()
+local doneLoading = false
+
+task.spawn(function()
+    while not doneLoading do
+        local elapsed = tick() - startT
+        local progress = math.clamp(elapsed / totalTime, 0, 1)
+        
+        -- Suaviza a curva (rápido no meio, devagar no fim)
+        local easedProgress = 1 - (1 - progress) * (1 - progress)
+        
+        barFill.Size = UDim2.new(easedProgress, 0, 1, 0)
+        pct.Text = math.floor(easedProgress * 100) .. "%"
+        
+        if progress >= 1 then
+            doneLoading = true
+        end
+        task.wait(0.03)
+    end
+end)
+
+task.wait(totalTime + 0.2)
+
+-- Fade out do loading
+local fadeInfo = TweenInfo.new(0.4, Enum.EasingStyle.Quart, Enum.EasingDirection.In)
+for _, obj in ipairs(loadGui:GetDescendants()) do
+    if obj:IsA("TextLabel") then
+        TweenService:Create(obj, fadeInfo, {TextTransparency = 1}):Play()
+    elseif obj:IsA("Frame") then
+        TweenService:Create(obj, fadeInfo, {BackgroundTransparency = 1}):Play()
+    elseif obj:IsA("UIStroke") then
+        TweenService:Create(obj, fadeInfo, {Transparency = 1}):Play()
+    end
+end
+task.wait(0.45)
+loadGui:Destroy()
+
+-- Agora abre o card de key
 local gui, card, screen1, screen2, tb, tbs,
       btnFree, btnKey, btnUsar, btnObter, btnVoltar,
       bos, dot, dotShadow, statusText = criarCard()

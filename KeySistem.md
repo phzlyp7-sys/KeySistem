@@ -1,3 +1,6 @@
+-- language: Luau, target: Roblox MOBILE
+-- Key Sistem 7zK — v3.4 (Estilo WindUI)
+
 local API_URL     = "https://get-key.iphz7.workers.dev"
 local URL_FREE    = "https://raw.githubusercontent.com/phzlyp7-sys/7Zk-FREE/refs/heads/main/FREE.md"
 local URL_PREMIUM = "https://raw.githubusercontent.com/phzlyp7-sys/7zK-PREMIUM/refs/heads/main/Premium.md"
@@ -11,26 +14,25 @@ local TweenService     = game:GetService("TweenService")
 local HttpService      = game:GetService("HttpService")
 local SoundService     = game:GetService("SoundService")
 local Debris           = game:GetService("Debris")
-local RunService       = game:GetService("RunService")
 local LocalPlayer      = Players.LocalPlayer
 
 --=====================================================================
--- PALETA
+-- PALETA (IDÊNTICA À WINDUI)
 --=====================================================================
-local C_BG         = Color3.fromRGB(5, 8, 7)
-local C_CARD       = Color3.fromRGB(10, 21, 16)
-local C_INPUT      = Color3.fromRGB(8, 16, 12)
-local C_STROKE     = Color3.fromRGB(20, 59, 40)
-local C_STROKE_HI  = Color3.fromRGB(31, 92, 61)
-local C_TEXT       = Color3.fromRGB(216, 245, 230)
-local C_MUTED      = Color3.fromRGB(107, 140, 122)
-local C_DIM        = Color3.fromRGB(61, 90, 74)
-local C_NEON       = Color3.fromRGB(0, 255, 136)
-local C_NEON_H     = Color3.fromRGB(74, 255, 170)
-local C_ERR        = Color3.fromRGB(255, 77, 94)
-local C_WARN       = Color3.fromRGB(255, 176, 32)
-local C_GHOST      = Color3.fromRGB(18, 42, 29)
-local C_GHOST_H    = Color3.fromRGB(24, 52, 36)
+local C_BG         = Color3.fromRGB(15, 15, 18)    -- Fundo geral
+local C_CARD       = Color3.fromRGB(24, 24, 28)    -- Fundo do card
+local C_ELEMENT    = Color3.fromRGB(36, 36, 40)    -- Fundo dos botões/inputs
+local C_ELEMENT_H  = Color3.fromRGB(46, 46, 50)    -- Hover dos botões
+local C_STROKE     = Color3.fromRGB(45, 45, 50)    -- Bordas
+local C_TEXT       = Color3.fromRGB(255, 255, 255) -- Texto principal
+local C_MUTED      = Color3.fromRGB(160, 160, 165) -- Texto secundário
+local C_DIM        = Color3.fromRGB(100, 100, 105) -- Placeholder
+local C_NEON       = Color3.fromRGB(40, 210, 120)  -- Verde WindUI
+local C_NEON_H     = Color3.fromRGB(50, 230, 135)  -- Verde hover
+local C_ERR        = Color3.fromRGB(235, 65, 65)   -- Vermelho erro
+local C_RED_BG     = Color3.fromRGB(45, 25, 25)    -- Vermelho escuro (Obter Key)
+local C_RED_BG_H   = Color3.fromRGB(60, 30, 30)    -- Vermelho escuro hover
+local C_RED_TEXT   = Color3.fromRGB(255, 100, 100) -- Texto vermelho
 
 --=====================================================================
 -- ÁUDIO
@@ -62,25 +64,10 @@ local function playSound(name, volume, pitch)
     end)
 end
 
-local function playOpenSound()
-    playSound("open", 0.32, 1.20)
-    task.delay(0.06, function()
-        lastSoundAt = 0
-        playSound("open", 0.20, 0.85)
-    end)
-end
-
-local function playClick() playSound("click", 0.40, 1.25) end
-
-local function playSuccess()
-    playSound("success", 0.55, 1.45)
-    task.delay(0.10, function()
-        lastSoundAt = 0
-        playSound("success", 0.40, 1.80)
-    end)
-end
-
-local function playError() playSound("error", 0.50, 0.65) end
+local function playOpenSound() playSound("open", 0.3, 1.0) end
+local function playClick() playSound("click", 0.4, 1.0) end
+local function playSuccess() playSound("success", 0.5, 1.2) end
+local function playError() playSound("error", 0.5, 0.8) end
 
 --=====================================================================
 -- HWID
@@ -124,170 +111,9 @@ local function httpGetComTimeout(url, timeout)
 end
 
 --=====================================================================
--- TELA DE CARREGAMENTO (MAIS LARGA E PRA CIMA)
+-- UI
 --=====================================================================
-local function criarLoadingScreen()
-    local pg = LocalPlayer:WaitForChild("PlayerGui")
-
-    local loadGui = Instance.new("ScreenGui")
-    loadGui.Name = "7zK_Loading"
-    loadGui.ResetOnSpawn = false
-    loadGui.DisplayOrder = 99999
-    loadGui.IgnoreGuiInset = true
-    loadGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-    loadGui.Parent = pg
-
-    -- Overlay escuro
-    local dim = Instance.new("Frame", loadGui)
-    dim.Size = UDim2.new(1, 0, 1, 0)
-    dim.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-    dim.BackgroundTransparency = 0.4
-    dim.BorderSizePixel = 0
-    dim.ZIndex = 1
-
-    -- Quadrado central (Agora 400x200 e mais pra cima)
-    local card = Instance.new("Frame", loadGui)
-    card.Size = UDim2.new(0, 400, 0, 200)
-    card.Position = UDim2.new(0.5, -200, 0.5, -130) -- Subiu 30px
-    card.BackgroundColor3 = C_CARD
-    card.BackgroundTransparency = 0.05
-    card.BorderSizePixel = 0
-    card.ZIndex = 2
-    card.ClipsDescendants = true
-
-    local cc = Instance.new("UICorner", card)
-    cc.CornerRadius = UDim.new(0, 16)
-
-    local cs = Instance.new("UIStroke", card)
-    cs.Color = C_NEON
-    cs.Thickness = 1.5
-    cs.Transparency = 0.2
-
-    -- Grade de fundo
-    local grid = Instance.new("Frame", card)
-    grid.Size = UDim2.new(1, 0, 1, 0)
-    grid.BackgroundTransparency = 1
-    grid.ZIndex = 3
-
-    for i = 0, 10 do
-        local line = Instance.new("Frame", grid)
-        line.Size = UDim2.new(1, 0, 0, 1)
-        line.Position = UDim2.new(0, 0, 0, i * 20)
-        line.BackgroundColor3 = C_NEON
-        line.BackgroundTransparency = 0.92
-        line.BorderSizePixel = 0
-    end
-    for i = 0, 20 do
-        local line = Instance.new("Frame", grid)
-        line.Size = UDim2.new(0, 1, 1, 0)
-        line.Position = UDim2.new(0, i * 20, 0, 0)
-        line.BackgroundColor3 = C_NEON
-        line.BackgroundTransparency = 0.92
-        line.BorderSizePixel = 0
-    end
-
-    -- Partículas flutuantes
-    local particleLayer = Instance.new("Frame", card)
-    particleLayer.Size = UDim2.new(1, 0, 1, 0)
-    particleLayer.BackgroundTransparency = 1
-    particleLayer.ZIndex = 4
-
-    for i = 1, 16 do
-        local p = Instance.new("Frame", particleLayer)
-        local sz = math.random(2, 5)
-        p.Size = UDim2.new(0, sz, 0, sz)
-        p.Position = UDim2.new(math.random(), 0, math.random(), 0)
-        p.BackgroundColor3 = C_NEON
-        p.BackgroundTransparency = math.random(60, 85) / 100
-        p.BorderSizePixel = 0
-        local pc = Instance.new("UICorner", p)
-        pc.CornerRadius = UDim.new(1, 0)
-
-        task.spawn(function()
-            while p.Parent do
-                local dur = math.random(150, 350) / 100
-                local targetY = math.random(-20, 120) / 100
-                TweenService:Create(p, TweenInfo.new(dur, Enum.EasingStyle.Sine), {
-                    Position = UDim2.new(p.Position.X.Scale, 0, targetY, 0)
-                }):Play()
-                task.wait(dur)
-            end
-        end)
-    end
-
-    -- Logo
-    local logo = Instance.new("TextLabel", card)
-    logo.Size = UDim2.new(1, 0, 0, 40)
-    logo.Position = UDim2.new(0, 0, 0, 30)
-    logo.BackgroundTransparency = 1
-    logo.RichText = true
-    logo.Text = '<font color="#D8F5E6">7</font><font color="#00FF88">z</font><font color="#D8F5E6">K</font>'
-    logo.TextSize = 32
-    logo.Font = Enum.Font.GothamBold
-    logo.TextXAlignment = Enum.TextXAlignment.Center
-    logo.ZIndex = 10
-
-    -- Subtítulo
-    local sub = Instance.new("TextLabel", card)
-    sub.Size = UDim2.new(1, 0, 0, 20)
-    sub.Position = UDim2.new(0, 0, 0, 70)
-    sub.BackgroundTransparency = 1
-    sub.Text = "C A R R E G A N D O   S I S T E M A"
-    sub.TextColor3 = C_MUTED
-    sub.TextSize = 10
-    sub.Font = Enum.Font.Code
-    sub.TextXAlignment = Enum.TextXAlignment.Center
-    sub.ZIndex = 10
-
-    -- Barra de fundo
-    local barBg = Instance.new("Frame", card)
-    barBg.Size = UDim2.new(1, -60, 0, 6)
-    barBg.Position = UDim2.new(0, 30, 0, 120)
-    barBg.BackgroundColor3 = C_INPUT
-    barBg.BorderSizePixel = 0
-    barBg.ZIndex = 10
-
-    local bbc = Instance.new("UICorner", barBg)
-    bbc.CornerRadius = UDim.new(1, 0)
-
-    local bbs = Instance.new("UIStroke", barBg)
-    bbs.Color = C_STROKE
-    bbs.Thickness = 1
-
-    -- Barra de preenchimento
-    local barFill = Instance.new("Frame", barBg)
-    barFill.Size = UDim2.new(0, 0, 1, 0)
-    barFill.BackgroundColor3 = C_NEON
-    barFill.BorderSizePixel = 0
-    barFill.ZIndex = 11
-
-    local bfc = Instance.new("UICorner", barFill)
-    bfc.CornerRadius = UDim.new(1, 0)
-
-    local bfGlow = Instance.new("UIStroke", barFill)
-    bfGlow.Color = C_NEON
-    bfGlow.Thickness = 3
-    bfGlow.Transparency = 0.7
-
-    -- Porcentagem
-    local pct = Instance.new("TextLabel", card)
-    pct.Size = UDim2.new(1, 0, 0, 18)
-    pct.Position = UDim2.new(0, 0, 0, 138)
-    pct.BackgroundTransparency = 1
-    pct.Text = "0%"
-    pct.TextColor3 = C_NEON
-    pct.TextSize = 12
-    pct.Font = Enum.Font.Code
-    pct.TextXAlignment = Enum.TextXAlignment.Center
-    pct.ZIndex = 10
-
-    return loadGui, barFill, pct, card, logo, sub
-end
-
---=====================================================================
--- UI DO KEY SYSTEM
---=====================================================================
-local function criarCard()
+local function criarUI()
     local pg = LocalPlayer:WaitForChild("PlayerGui")
 
     local gui = Instance.new("ScreenGui")
@@ -298,303 +124,130 @@ local function criarCard()
     gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     gui.Parent = pg
 
-    -- GRADE DE FUNDO
-    local grid = Instance.new("Frame", gui)
-    grid.Size = UDim2.new(1, 0, 1, 0)
-    grid.BackgroundTransparency = 1
-    grid.ZIndex = 0
+    -- OVERLAY ESCURO (Fundo da tela)
+    local overlay = Instance.new("Frame", gui)
+    overlay.Size = UDim2.new(1, 0, 1, 0)
+    overlay.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    overlay.BackgroundTransparency = 0.3
+    overlay.BorderSizePixel = 0
+    overlay.ZIndex = 1
 
-    for i = 0, 24 do
-        local line = Instance.new("Frame", grid)
-        line.Size = UDim2.new(1, 0, 0, 1)
-        line.Position = UDim2.new(0, 0, 0, i * 40)
-        line.BackgroundColor3 = C_NEON
-        line.BackgroundTransparency = 0.94
-        line.BorderSizePixel = 0
-    end
-    for i = 0, 30 do
-        local line = Instance.new("Frame", grid)
-        line.Size = UDim2.new(0, 1, 1, 0)
-        line.Position = UDim2.new(0, i * 40, 0, 0)
-        line.BackgroundColor3 = C_NEON
-        line.BackgroundTransparency = 0.94
-        line.BorderSizePixel = 0
-    end
-
-    -- PARTÍCULAS DE FUNDO
-    local particleLayer = Instance.new("Frame", gui)
-    particleLayer.Size = UDim2.new(1, 0, 1, 0)
-    particleLayer.BackgroundTransparency = 1
-    particleLayer.ZIndex = 1
-
-    for i = 1, 14 do
-        local p = Instance.new("Frame", particleLayer)
-        local sz = math.random(3, 6)
-        p.Size = UDim2.new(0, sz, 0, sz)
-        p.Position = UDim2.new(math.random(), 0, math.random(), 0)
-        p.BackgroundColor3 = C_NEON
-        p.BackgroundTransparency = math.random(70, 88) / 100
-        p.BorderSizePixel = 0
-
-        local pc = Instance.new("UICorner", p)
-        pc.CornerRadius = UDim.new(1, 0)
-
-        task.spawn(function()
-            while p.Parent do
-                local dur = math.random(250, 500) / 100
-                local targetY = math.random(-10, 100) / 100
-                TweenService:Create(p, TweenInfo.new(dur, Enum.EasingStyle.Sine), {
-                    Position = UDim2.new(p.Position.X.Scale, 0, targetY, 0)
-                }):Play()
-                task.wait(dur)
-            end
-        end)
-    end
-
-    -- CARD
+    -- CARD PRINCIPAL
     local card = Instance.new("Frame")
-    card.Size = UDim2.new(0, 340, 0, 340)
-    card.Position = UDim2.new(0.5, -170, 0.5, -170)
+    card.Size = UDim2.new(0, 360, 0, 310)
+    card.Position = UDim2.new(0.5, -180, 0.5, -155)
     card.BackgroundColor3 = C_CARD
-    card.BackgroundTransparency = 0.05
     card.BorderSizePixel = 0
     card.ZIndex = 10
     card.Parent = gui
 
     local cc = Instance.new("UICorner", card)
-    cc.CornerRadius = UDim.new(0, 16)
+    cc.CornerRadius = UDim.new(0, 12)
 
     local cs = Instance.new("UIStroke", card)
-    cs.Color = C_STROKE_HI
+    cs.Color = C_STROKE
     cs.Thickness = 1
-    cs.Transparency = 0.15
+    cs.Transparency = 0.5
 
-    local shadow = Instance.new("ImageLabel", card)
-    shadow.AnchorPoint = Vector2.new(0.5, 0.5)
-    shadow.Position = UDim2.new(0.5, 0, 0.5, 14)
-    shadow.Size = UDim2.new(1, 32, 1, 32)
-    shadow.BackgroundTransparency = 1
-    shadow.Image = "rbxassetid://5028857084"
-    shadow.ImageColor3 = Color3.fromRGB(0, 0, 0)
-    shadow.ImageTransparency = 0.55
-    shadow.ScaleType = Enum.ScaleType.Slice
-    shadow.SliceCenter = Rect.new(24, 24, 276, 276)
-    shadow.ZIndex = -1
+    -- HEADER
+    local header = Instance.new("Frame", card)
+    header.Size = UDim2.new(1, 0, 0, 65)
+    header.Position = UDim2.new(0, 0, 0, 0)
+    header.BackgroundTransparency = 1
+    header.ZIndex = 11
 
-    -- LINHA NEON DO TOPO
-    local topGlow = Instance.new("Frame", card)
-    topGlow.Size = UDim2.new(1, -32, 0, 2)
-    topGlow.Position = UDim2.new(0, 16, 0, 0)
-    topGlow.BackgroundColor3 = C_NEON
-    topGlow.BorderSizePixel = 0
-    topGlow.ZIndex = 12
+    -- ÍCONE (Logo)
+    local icon = Instance.new("ImageLabel", header)
+    icon.Size = UDim2.new(0, 24, 0, 24)
+    icon.Position = UDim2.new(0, 20, 0, 20)
+    icon.BackgroundTransparency = 1
+    icon.Image = "rbxassetid://4483345998" -- Ícone padrão WindUI
+    icon.ImageColor3 = C_TEXT
+    icon.ZIndex = 12
 
-    local tgc = Instance.new("UICorner", topGlow)
-    tgc.CornerRadius = UDim.new(1, 0)
+    -- TÍTULO E SUBTÍTULO
+    local title = Instance.new("TextLabel", header)
+    title.Size = UDim2.new(1, -70, 0, 20)
+    title.Position = UDim2.new(0, 54, 0, 16)
+    title.BackgroundTransparency = 1
+    title.Text = "7zK | Key System"
+    title.TextColor3 = C_TEXT
+    title.TextSize = 16
+    title.Font = Enum.Font.GothamBold
+    title.TextXAlignment = Enum.TextXAlignment.Left
+    title.ZIndex = 12
 
-    task.spawn(function()
-        while card.Parent do
-            TweenService:Create(topGlow, TweenInfo.new(1.8, Enum.EasingStyle.Sine), {
-                BackgroundTransparency = 0.5
-            }):Play()
-            task.wait(1.8)
-            if not card.Parent then break end
-            TweenService:Create(topGlow, TweenInfo.new(1.8, Enum.EasingStyle.Sine), {
-                BackgroundTransparency = 0
-            }):Play()
-            task.wait(1.8)
-        end
-    end)
+    local subtitle = Instance.new("TextLabel", header)
+    subtitle.Size = UDim2.new(1, -70, 0, 16)
+    subtitle.Position = UDim2.new(0, 54, 0, 36)
+    subtitle.BackgroundTransparency = 1
+    subtitle.Text = "Autenticação necessária"
+    subtitle.TextColor3 = C_MUTED
+    subtitle.TextSize = 12
+    subtitle.Font = Enum.Font.Gotham
+    subtitle.TextXAlignment = Enum.TextXAlignment.Left
+    subtitle.ZIndex = 12
 
-    local glowBg = Instance.new("ImageLabel", card)
-    glowBg.Size = UDim2.new(1, 32, 0, 24)
-    glowBg.Position = UDim2.new(0, -16, 0, -12)
-    glowBg.BackgroundTransparency = 1
-    glowBg.Image = "rbxassetid://5028857084"
-    glowBg.ImageColor3 = C_NEON
-    glowBg.ImageTransparency = 0.55
-    glowBg.ScaleType = Enum.ScaleType.Slice
-    glowBg.SliceCenter = Rect.new(24, 24, 276, 276)
-    glowBg.ZIndex = 11
+    -- BOTÃO X (FECHAR)
+    local closeBtn = Instance.new("TextButton", header)
+    closeBtn.Size = UDim2.new(0, 30, 0, 30)
+    closeBtn.Position = UDim2.new(1, -40, 0, 17)
+    closeBtn.BackgroundTransparency = 1
+    closeBtn.Text = "×"
+    closeBtn.TextColor3 = C_MUTED
+    closeBtn.TextSize = 22
+    closeBtn.Font = Enum.Font.GothamBold
+    closeBtn.BorderSizePixel = 0
+    closeBtn.AutoButtonColor = false
+    closeBtn.ZIndex = 100 -- ZIndex alto para receber o clique
 
-    local scan = Instance.new("Frame", card)
-    scan.Size = UDim2.new(1, -20, 0, 2)
-    scan.Position = UDim2.new(0, 10, 0, -10)
-    scan.BackgroundColor3 = C_NEON
-    scan.BackgroundTransparency = 0.7
-    scan.BorderSizePixel = 0
-    scan.ZIndex = 14
+    closeBtn.MouseEnter:Connect(function() TweenService:Create(closeBtn, TweenInfo.new(0.1), {TextColor3 = C_ERR}):Play() end)
+    closeBtn.MouseLeave:Connect(function() TweenService:Create(closeBtn, TweenInfo.new(0.1), {TextColor3 = C_MUTED}):Play() end)
 
-    local scanGrad = Instance.new("UIGradient", scan)
-    scanGrad.Transparency = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 1),
-        NumberSequenceKeypoint.new(0.5, 0.4),
-        NumberSequenceKeypoint.new(1, 1),
-    })
+    -- ÁREA DE ARRASTAR (Apenas no lado esquerdo do header)
+    local headerArea = Instance.new("TextButton", header)
+    headerArea.Size = UDim2.new(1, -50, 1, 0)
+    headerArea.Position = UDim2.new(0, 0, 0, 0)
+    headerArea.BackgroundTransparency = 1
+    headerArea.Text = ""
+    headerArea.ZIndex = 20
 
-    task.spawn(function()
-        while card.Parent do
-            scan.Position = UDim2.new(0, 10, 0, -10)
-            TweenService:Create(scan, TweenInfo.new(4, Enum.EasingStyle.Linear), {
-                Position = UDim2.new(0, 10, 1, 10)
-            }):Play()
-            task.wait(4)
-        end
-    end)
-
-    local function hudCorner(pos, size)
-        local c = Instance.new("Frame", card)
-        c.Size = size
-        c.Position = pos
-        c.BackgroundColor3 = C_NEON
-        c.BorderSizePixel = 0
-        c.ZIndex = 13
-    end
-
-    hudCorner(UDim2.new(0, 10, 0, 10), UDim2.new(0, 14, 0, 2))
-    hudCorner(UDim2.new(0, 10, 0, 10), UDim2.new(0, 2, 0, 14))
-    hudCorner(UDim2.new(1, -24, 0, 10), UDim2.new(0, 14, 0, 2))
-    hudCorner(UDim2.new(1, -12, 0, 10), UDim2.new(0, 2, 0, 14))
-    hudCorner(UDim2.new(0, 10, 1, -12), UDim2.new(0, 14, 0, 2))
-    hudCorner(UDim2.new(0, 10, 1, -24), UDim2.new(0, 2, 0, 14))
-    hudCorner(UDim2.new(1, -24, 1, -12), UDim2.new(0, 14, 0, 2))
-    hudCorner(UDim2.new(1, -12, 1, -24), UDim2.new(0, 2, 0, 14))
-
-    local logo = Instance.new("Frame", card)
-    logo.Size = UDim2.new(0, 70, 0, 22)
-    logo.Position = UDim2.new(0, 26, 0, 24)
-    logo.BackgroundTransparency = 1
-    logo.ZIndex = 12
-
-    local lbl7 = Instance.new("TextLabel", logo)
-    lbl7.Size = UDim2.new(0, 14, 1, 0)
-    lbl7.Position = UDim2.new(0, 0, 0, 0)
-    lbl7.BackgroundTransparency = 1
-    lbl7.Text = "7"
-    lbl7.TextColor3 = C_TEXT
-    lbl7.TextSize = 19
-    lbl7.Font = Enum.Font.GothamBold
-    lbl7.TextXAlignment = Enum.TextXAlignment.Left
-    lbl7.ZIndex = 12
-
-    local lblz = Instance.new("TextLabel", logo)
-    lblz.Size = UDim2.new(0, 14, 1, 0)
-    lblz.Position = UDim2.new(0, 12, 0, 0)
-    lblz.BackgroundTransparency = 1
-    lblz.Text = "z"
-    lblz.TextColor3 = C_NEON
-    lblz.TextSize = 19
-    lblz.Font = Enum.Font.GothamBold
-    lblz.TextXAlignment = Enum.TextXAlignment.Left
-    lblz.ZIndex = 12
-
-    local lblzStroke = Instance.new("UIStroke", lblz)
-    lblzStroke.Color = C_NEON
-    lblzStroke.Thickness = 1
-    lblzStroke.Transparency = 0.4
-
-    local lblK = Instance.new("TextLabel", logo)
-    lblK.Size = UDim2.new(0, 22, 1, 0)
-    lblK.Position = UDim2.new(0, 24, 0, 0)
-    lblK.BackgroundTransparency = 1
-    lblK.Text = "K"
-    lblK.TextColor3 = C_TEXT
-    lblK.TextSize = 19
-    lblK.Font = Enum.Font.GothamBold
-    lblK.TextXAlignment = Enum.TextXAlignment.Left
-    lblK.ZIndex = 12
-
-    local tag = Instance.new("TextLabel", card)
-    tag.Size = UDim2.new(0, 100, 0, 22)
-    tag.Position = UDim2.new(0, 96, 0, 24)
-    tag.BackgroundTransparency = 1
-    tag.Text = "A C E S S O"
-    tag.TextColor3 = C_MUTED
-    tag.TextSize = 9
-    tag.Font = Enum.Font.Code
-    tag.TextXAlignment = Enum.TextXAlignment.Left
-    tag.ZIndex = 12
-
-    local dot = Instance.new("Frame", card)
-    dot.Size = UDim2.new(0, 7, 0, 7)
-    dot.Position = UDim2.new(1, -30, 0, 35)
-    dot.AnchorPoint = Vector2.new(1, 0.5)
-    dot.BackgroundColor3 = C_DIM
-    dot.BorderSizePixel = 0
-    dot.ZIndex = 12
-
-    local dotc = Instance.new("UICorner", dot)
-    dotc.CornerRadius = UDim.new(1, 0)
-
-    local dotShadow = Instance.new("UIStroke", dot)
-    dotShadow.Color = C_DIM
-    dotShadow.Thickness = 4
-    dotShadow.Transparency = 0.85
-
-    local statusText = Instance.new("TextLabel", card)
-    statusText.Size = UDim2.new(0, 140, 0, 22)
-    statusText.Position = UDim2.new(1, -44, 0, 24)
-    statusText.AnchorPoint = Vector2.new(1, 0)
-    statusText.BackgroundTransparency = 1
-    statusText.Text = "escolha"
-    statusText.TextColor3 = C_MUTED
-    statusText.TextSize = 10
-    statusText.Font = Enum.Font.Code
-    statusText.TextXAlignment = Enum.TextXAlignment.Right
-    statusText.ZIndex = 12
-
+    -- DIVIDER
     local divider = Instance.new("Frame", card)
-    divider.Size = UDim2.new(1, -48, 0, 1)
-    divider.Position = UDim2.new(0, 24, 0, 60)
+    divider.Size = UDim2.new(1, -40, 0, 1)
+    divider.Position = UDim2.new(0, 20, 0, 65)
     divider.BackgroundColor3 = C_STROKE
     divider.BorderSizePixel = 0
     divider.ZIndex = 12
 
-    -- TELA 1
+    -- TELA 1 (ESCOLHA)
     local screen1 = Instance.new("Frame", card)
-    screen1.Size = UDim2.new(1, 0, 0, 270)
-    screen1.Position = UDim2.new(0, 0, 0, 62)
+    screen1.Size = UDim2.new(1, 0, 0, 230)
+    screen1.Position = UDim2.new(0, 0, 0, 70)
     screen1.BackgroundTransparency = 1
     screen1.ZIndex = 11
 
-    local subtitle = Instance.new("TextLabel", screen1)
-    subtitle.Size = UDim2.new(1, -48, 0, 42)
-    subtitle.Position = UDim2.new(0, 24, 0, 10)
-    subtitle.BackgroundTransparency = 1
-    subtitle.Text = "Escolha como entrar\nGrátis com funções básicas ou com key pra tudo"
-    subtitle.TextColor3 = C_MUTED
-    subtitle.TextSize = 11
-    subtitle.Font = Enum.Font.Code
-    subtitle.TextXAlignment = Enum.TextXAlignment.Left
-    subtitle.TextYAlignment = Enum.TextYAlignment.Top
-    subtitle.TextWrapped = true
-    subtitle.ZIndex = 12
-
     local btnFree = Instance.new("TextButton", screen1)
-    btnFree.Size = UDim2.new(1, -48, 0, 52)
-    btnFree.Position = UDim2.new(0, 24, 0, 64)
-    btnFree.BackgroundColor3 = C_GHOST
+    btnFree.Size = UDim2.new(1, -40, 0, 48)
+    btnFree.Position = UDim2.new(0, 20, 0, 10)
+    btnFree.BackgroundColor3 = C_ELEMENT
     btnFree.TextColor3 = C_TEXT
-    btnFree.Text = "Versão sem Key"
+    btnFree.Text = "Entrar na Versão FREE"
     btnFree.TextSize = 14
-    btnFree.Font = Enum.Font.GothamBold
+    btnFree.Font = Enum.Font.GothamMedium
     btnFree.BorderSizePixel = 0
     btnFree.AutoButtonColor = false
     btnFree.ZIndex = 12
 
     local bfc = Instance.new("UICorner", btnFree)
-    bfc.CornerRadius = UDim.new(0, 10)
-
-    local bfs = Instance.new("UIStroke", btnFree)
-    bfs.Color = C_STROKE_HI
-    bfs.Thickness = 1
+    bfc.CornerRadius = UDim.new(0, 8)
 
     local btnKey = Instance.new("TextButton", screen1)
-    btnKey.Size = UDim2.new(1, -48, 0, 52)
-    btnKey.Position = UDim2.new(0, 24, 0, 134)
+    btnKey.Size = UDim2.new(1, -40, 0, 48)
+    btnKey.Position = UDim2.new(0, 20, 0, 68)
     btnKey.BackgroundColor3 = C_NEON
-    btnKey.TextColor3 = Color3.fromRGB(5, 8, 7)
-    btnKey.Text = "Tenho uma Key"
+    btnKey.TextColor3 = Color3.fromRGB(10, 10, 10)
+    btnKey.Text = "Inserir Key PREMIUM"
     btnKey.TextSize = 14
     btnKey.Font = Enum.Font.GothamBold
     btnKey.BorderSizePixel = 0
@@ -602,84 +255,66 @@ local function criarCard()
     btnKey.ZIndex = 12
 
     local bkc = Instance.new("UICorner", btnKey)
-    bkc.CornerRadius = UDim.new(0, 10)
-
-    task.spawn(function()
-        while btnKey.Parent do
-            TweenService:Create(btnKey, TweenInfo.new(1.4, Enum.EasingStyle.Sine), {
-                BackgroundColor3 = C_NEON_H
-            }):Play()
-            task.wait(1.4)
-            if not btnKey.Parent then break end
-            TweenService:Create(btnKey, TweenInfo.new(1.4, Enum.EasingStyle.Sine), {
-                BackgroundColor3 = C_NEON
-            }):Play()
-            task.wait(1.4)
-        end
-    end)
+    bkc.CornerRadius = UDim.new(0, 8)
 
     local keySub = Instance.new("TextLabel", screen1)
-    keySub.Size = UDim2.new(1, -48, 0, 12)
-    keySub.Position = UDim2.new(0, 24, 0, 192)
+    keySub.Size = UDim2.new(1, -40, 0, 30)
+    keySub.Position = UDim2.new(0, 20, 0, 130)
     keySub.BackgroundTransparency = 1
-    keySub.Text = "Keys são grátis no nosso site"
-    keySub.TextColor3 = C_ERR
-    keySub.TextSize = 10
-    keySub.Font = Enum.Font.GothamBold
-    keySub.TextXAlignment = Enum.TextXAlignment.Center
+    keySub.Text = "Keys são obtidas no nosso site (link direto)"
+    keySub.TextColor3 = C_MUTED
+    keySub.TextSize = 12
+    keySub.Font = Enum.Font.Gotham
+    keySub.TextWrapped = true
     keySub.ZIndex = 12
 
-    -- TELA 2
+    -- TELA 2 (KEY)
     local screen2 = Instance.new("Frame", card)
-    screen2.Size = UDim2.new(1, 0, 0, 270)
-    screen2.Position = UDim2.new(0, 0, 0, 62)
+    screen2.Size = UDim2.new(1, 0, 0, 230)
+    screen2.Position = UDim2.new(0, 0, 0, 70)
     screen2.BackgroundTransparency = 1
     screen2.Visible = false
     screen2.ZIndex = 11
 
     local labelKey = Instance.new("TextLabel", screen2)
-    labelKey.Size = UDim2.new(1, -48, 0, 14)
-    labelKey.Position = UDim2.new(0, 24, 0, 10)
+    labelKey.Size = UDim2.new(1, -40, 0, 14)
+    labelKey.Position = UDim2.new(0, 20, 0, 0)
     labelKey.BackgroundTransparency = 1
-    labelKey.Text = "K E Y   D E   A C E S S O"
+    labelKey.Text = "SUA CHAVE DE ACESSO"
     labelKey.TextColor3 = C_MUTED
-    labelKey.TextSize = 9
-    labelKey.Font = Enum.Font.Code
+    labelKey.TextSize = 11
+    labelKey.Font = Enum.Font.GothamMedium
     labelKey.TextXAlignment = Enum.TextXAlignment.Left
     labelKey.ZIndex = 12
 
     local tb = Instance.new("TextBox", screen2)
-    tb.Size = UDim2.new(1, -48, 0, 44)
-    tb.Position = UDim2.new(0, 24, 0, 28)
-    tb.BackgroundColor3 = C_INPUT
+    tb.Size = UDim2.new(1, -40, 0, 44)
+    tb.Position = UDim2.new(0, 20, 0, 18)
+    tb.BackgroundColor3 = C_ELEMENT
     tb.TextColor3 = C_TEXT
-    tb.PlaceholderText = "cole sua key aqui"
+    tb.PlaceholderText = "Cole sua key aqui..."
     tb.PlaceholderColor3 = C_DIM
     tb.Text = ""
     tb.TextSize = 13
-    tb.Font = Enum.Font.Code
+    tb.Font = Enum.Font.Gotham
     tb.BorderSizePixel = 0
     tb.ClearTextOnFocus = false
     tb.TextXAlignment = Enum.TextXAlignment.Left
     tb.ZIndex = 12
 
     local tbc = Instance.new("UICorner", tb)
-    tbc.CornerRadius = UDim.new(0, 10)
+    tbc.CornerRadius = UDim.new(0, 8)
 
     local tbp = Instance.new("UIPadding", tb)
-    tbp.PaddingLeft = UDim.new(0, 14)
-    tbp.PaddingRight = UDim.new(0, 14)
-
-    local tbs = Instance.new("UIStroke", tb)
-    tbs.Color = C_STROKE
-    tbs.Thickness = 1
+    tbp.PaddingLeft = UDim.new(0, 12)
+    tbp.PaddingRight = UDim.new(0, 12)
 
     local btnUsar = Instance.new("TextButton", screen2)
-    btnUsar.Size = UDim2.new(1, -48, 0, 46)
-    btnUsar.Position = UDim2.new(0, 24, 0, 86)
+    btnUsar.Size = UDim2.new(1, -40, 0, 44)
+    btnUsar.Position = UDim2.new(0, 20, 0, 72)
     btnUsar.BackgroundColor3 = C_NEON
-    btnUsar.TextColor3 = Color3.fromRGB(5, 8, 7)
-    btnUsar.Text = "Usar Key"
+    btnUsar.TextColor3 = Color3.fromRGB(10, 10, 10)
+    btnUsar.Text = "Validar Key"
     btnUsar.TextSize = 14
     btnUsar.Font = Enum.Font.GothamBold
     btnUsar.BorderSizePixel = 0
@@ -687,179 +322,186 @@ local function criarCard()
     btnUsar.ZIndex = 12
 
     local bvc = Instance.new("UICorner", btnUsar)
-    bvc.CornerRadius = UDim.new(0, 10)
+    bvc.CornerRadius = UDim.new(0, 8)
 
+    -- Botão Obter Key (Vermelho)
     local btnObter = Instance.new("TextButton", screen2)
-    btnObter.Size = UDim2.new(1, -48, 0, 38)
-    btnObter.Position = UDim2.new(0, 24, 0, 146)
-    btnObter.BackgroundColor3 = C_GHOST
-    btnObter.TextColor3 = C_TEXT
-    btnObter.Text = "Obter Key"
+    btnObter.Size = UDim2.new(1, -40, 0, 44)
+    btnObter.Position = UDim2.new(0, 20, 0, 126)
+    btnObter.BackgroundColor3 = C_RED_BG
+    btnObter.TextColor3 = C_RED_TEXT
+    btnObter.Text = "Obter Key (Link Direto)"
     btnObter.TextSize = 13
-    btnObter.Font = Enum.Font.Gotham
+    btnObter.Font = Enum.Font.GothamBold
     btnObter.BorderSizePixel = 0
     btnObter.AutoButtonColor = false
     btnObter.ZIndex = 12
 
     local boc = Instance.new("UICorner", btnObter)
-    boc.CornerRadius = UDim.new(0, 10)
+    boc.CornerRadius = UDim.new(0, 8)
 
     local bos = Instance.new("UIStroke", btnObter)
-    bos.Color = C_STROKE_HI
+    bos.Color = C_ERR
     bos.Thickness = 1
+    bos.Transparency = 0.8
 
     local btnVoltar = Instance.new("TextButton", screen2)
-    btnVoltar.Size = UDim2.new(1, -48, 0, 30)
-    btnVoltar.Position = UDim2.new(0, 24, 0, 192)
-    btnVoltar.BackgroundColor3 = C_GHOST
+    btnVoltar.Size = UDim2.new(1, -40, 0, 36)
+    btnVoltar.Position = UDim2.new(0, 20, 0, 180)
+    btnVoltar.BackgroundColor3 = C_ELEMENT
     btnVoltar.TextColor3 = C_MUTED
     btnVoltar.Text = "Voltar"
-    btnVoltar.TextSize = 11
-    btnVoltar.Font = Enum.Font.Gotham
+    btnVoltar.TextSize = 12
+    btnVoltar.Font = Enum.Font.GothamMedium
     btnVoltar.BorderSizePixel = 0
     btnVoltar.AutoButtonColor = false
     btnVoltar.ZIndex = 12
 
-    local bvc2 = Instance.new("UICorner", btnVoltar)
-    bvc2.CornerRadius = UDim.new(0, 10)
+    local bvs2 = Instance.new("UICorner", btnVoltar)
+    bvs2.CornerRadius = UDim.new(0, 8)
 
-    local bvs2 = Instance.new("UIStroke", btnVoltar)
-    bvs2.Color = C_STROKE_HI
-    bvs2.Thickness = 1
+    -- STATUS FOOTER
+    local statusText = Instance.new("TextLabel", card)
+    statusText.Size = UDim2.new(1, -40, 0, 20)
+    statusText.Position = UDim2.new(0, 20, 1, -28)
+    statusText.BackgroundTransparency = 1
+    statusText.Text = "Aguardando..."
+    statusText.TextColor3 = C_MUTED
+    statusText.TextSize = 11
+    statusText.Font = Enum.Font.GothamMedium
+    statusText.TextXAlignment = Enum.TextXAlignment.Left
+    statusText.ZIndex = 12
 
-    -- DRAG
+    -- POPUP (CONFIRMAÇÃO DE FECHAMENTO)
+    local popup = Instance.new("Frame", gui)
+    popup.Size = UDim2.new(0, 280, 0, 140)
+    popup.Position = UDim2.new(0.5, -140, 0.5, -70)
+    popup.BackgroundColor3 = C_CARD
+    popup.BorderSizePixel = 0
+    popup.ZIndex = 30
+    popup.Visible = false
+
+    local pc = Instance.new("UICorner", popup)
+    pc.CornerRadius = UDim.new(0, 12)
+
+    local ps = Instance.new("UIStroke", popup)
+    ps.Color = C_STROKE
+    ps.Thickness = 1
+
+    local popupTitle = Instance.new("TextLabel", popup)
+    popupTitle.Size = UDim2.new(1, -40, 0, 30)
+    popupTitle.Position = UDim2.new(0, 20, 0, 20)
+    popupTitle.BackgroundTransparency = 1
+    popupTitle.Text = "Fechar Sistema?"
+    popupTitle.TextColor3 = C_TEXT
+    popupTitle.TextSize = 15
+    popupTitle.Font = Enum.Font.GothamBold
+    popupTitle.TextXAlignment = Enum.TextXAlignment.Center
+    popupTitle.ZIndex = 31
+
+    local popupDesc = Instance.new("TextLabel", popup)
+    popupDesc.Size = UDim2.new(1, -40, 0, 20)
+    popupDesc.Position = UDim2.new(0, 20, 0, 50)
+    popupDesc.BackgroundTransparency = 1
+    popupDesc.Text = "Você precisará validar a key novamente."
+    popupDesc.TextColor3 = C_MUTED
+    popupDesc.TextSize = 11
+    popupDesc.Font = Enum.Font.Gotham
+    popupDesc.TextXAlignment = Enum.TextXAlignment.Center
+    popupDesc.ZIndex = 31
+
+    local btnSim = Instance.new("TextButton", popup)
+    btnSim.Size = UDim2.new(0.5, -25, 0, 36)
+    btnSim.Position = UDim2.new(0, 20, 0, 85)
+    btnSim.BackgroundColor3 = C_ERR
+    btnSim.TextColor3 = C_TEXT
+    btnSim.Text = "Sim, fechar"
+    btnSim.TextSize = 13
+    btnSim.Font = Enum.Font.GothamBold
+    btnSim.BorderSizePixel = 0
+    btnSim.AutoButtonColor = false
+    btnSim.ZIndex = 31
+
+    local bsc = Instance.new("UICorner", btnSim)
+    bsc.CornerRadius = UDim.new(0, 8)
+
+    local btnNao = Instance.new("TextButton", popup)
+    btnNao.Size = UDim2.new(0.5, -25, 0, 36)
+    btnNao.Position = UDim2.new(0.5, 5, 0, 85)
+    btnNao.BackgroundColor3 = C_ELEMENT
+    btnNao.TextColor3 = C_TEXT
+    btnNao.Text = "Cancelar"
+    btnNao.TextSize = 13
+    btnNao.Font = Enum.Font.GothamBold
+    btnNao.BorderSizePixel = 0
+    btnNao.AutoButtonColor = false
+    btnNao.ZIndex = 31
+
+    local bnc = Instance.new("UICorner", btnNao)
+    bnc.CornerRadius = UDim.new(0, 8)
+
+    -- HOVERS E ANIMAÇÕES
+    tb.Focused:Connect(function() TweenService:Create(tb, TweenInfo.new(0.15), {BackgroundColor3 = C_ELEMENT_H}):Play() end)
+    tb.FocusLost:Connect(function() TweenService:Create(tb, TweenInfo.new(0.15), {BackgroundColor3 = C_ELEMENT}):Play() end)
+
+    btnFree.MouseEnter:Connect(function() TweenService:Create(btnFree, TweenInfo.new(0.1), {BackgroundColor3 = C_ELEMENT_H}):Play() end)
+    btnFree.MouseLeave:Connect(function() TweenService:Create(btnFree, TweenInfo.new(0.1), {BackgroundColor3 = C_ELEMENT}):Play() end)
+
+    btnKey.MouseEnter:Connect(function() TweenService:Create(btnKey, TweenInfo.new(0.1), {BackgroundColor3 = C_NEON_H}):Play() end)
+    btnKey.MouseLeave:Connect(function() TweenService:Create(btnKey, TweenInfo.new(0.1), {BackgroundColor3 = C_NEON}):Play() end)
+
+    btnUsar.MouseEnter:Connect(function() if btnUsar.Text == "Validar Key" then TweenService:Create(btnUsar, TweenInfo.new(0.1), {BackgroundColor3 = C_NEON_H}):Play() end end)
+    btnUsar.MouseLeave:Connect(function() if btnUsar.Text == "Validar Key" then TweenService:Create(btnUsar, TweenInfo.new(0.1), {BackgroundColor3 = C_NEON}):Play() end end)
+
+    btnObter.MouseEnter:Connect(function() 
+        TweenService:Create(btnObter, TweenInfo.new(0.1), {BackgroundColor3 = C_RED_BG_H}):Play()
+        TweenService:Create(bos, TweenInfo.new(0.1), {Transparency = 0.5}):Play()
+    end)
+    btnObter.MouseLeave:Connect(function() 
+        TweenService:Create(btnObter, TweenInfo.new(0.1), {BackgroundColor3 = C_RED_BG}):Play()
+        TweenService:Create(bos, TweenInfo.new(0.1), {Transparency = 0.8}):Play()
+    end)
+
+    btnVoltar.MouseEnter:Connect(function() TweenService:Create(btnVoltar, TweenInfo.new(0.1), {BackgroundColor3 = C_ELEMENT_H, TextColor3 = C_TEXT}):Play() end)
+    btnVoltar.MouseLeave:Connect(function() TweenService:Create(btnVoltar, TweenInfo.new(0.1), {BackgroundColor3 = C_ELEMENT, TextColor3 = C_MUTED}):Play() end)
+
+    btnSim.MouseEnter:Connect(function() TweenService:Create(btnSim, TweenInfo.new(0.1), {BackgroundColor3 = Color3.fromRGB(255, 85, 85)}):Play() end)
+    btnSim.MouseLeave:Connect(function() TweenService:Create(btnSim, TweenInfo.new(0.1), {BackgroundColor3 = C_ERR}):Play() end)
+
+    btnNao.MouseEnter:Connect(function() TweenService:Create(btnNao, TweenInfo.new(0.1), {BackgroundColor3 = C_ELEMENT_H}):Play() end)
+    btnNao.MouseLeave:Connect(function() TweenService:Create(btnNao, TweenInfo.new(0.1), {BackgroundColor3 = C_ELEMENT}):Play() end)
+
+    -- DRAG LÓGICA
     local drag, dragStart, startPos
-    local headerArea = Instance.new("TextButton", card)
-    headerArea.Size = UDim2.new(1, 0, 0, 60)
-    headerArea.Position = UDim2.new(0, 0, 0, 0)
-    headerArea.BackgroundTransparency = 1
-    headerArea.Text = ""
-    headerArea.ZIndex = 20
-    headerArea.Parent = card
-
     headerArea.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1
-        or input.UserInputType == Enum.UserInputType.Touch then
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             drag = true
             dragStart = input.Position
             startPos = card.Position
         end
     end)
     UserInputService.InputChanged:Connect(function(input)
-        if drag and (input.UserInputType == Enum.UserInputType.MouseMovement
-        or input.UserInputType == Enum.UserInputType.Touch) then
+        if drag and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
             local d = input.Position - dragStart
-            card.Position = UDim2.new(
-                startPos.X.Scale, startPos.X.Offset + d.X,
-                startPos.Y.Scale, startPos.Y.Offset + d.Y
-            )
+            card.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + d.X, startPos.Y.Scale, startPos.Y.Offset + d.Y)
         end
     end)
     UserInputService.InputEnded:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1
-        or input.UserInputType == Enum.UserInputType.Touch then
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             drag = false
         end
     end)
 
-    tb.Focused:Connect(function()
-        TweenService:Create(tbs, TweenInfo.new(0.15), {Color = C_NEON}):Play()
-    end)
-    tb.FocusLost:Connect(function()
-        TweenService:Create(tbs, TweenInfo.new(0.15), {Color = C_STROKE}):Play()
-    end)
-
-    btnFree.MouseEnter:Connect(function()
-        TweenService:Create(btnFree, TweenInfo.new(0.12), {BackgroundColor3 = C_GHOST_H}):Play()
-        TweenService:Create(bfs, TweenInfo.new(0.12), {Color = C_NEON}):Play()
-    end)
-    btnFree.MouseLeave:Connect(function()
-        TweenService:Create(btnFree, TweenInfo.new(0.12), {BackgroundColor3 = C_GHOST}):Play()
-        TweenService:Create(bfs, TweenInfo.new(0.12), {Color = C_STROKE_HI}):Play()
-    end)
-
-    btnKey.MouseEnter:Connect(function()
-        TweenService:Create(bkc, TweenInfo.new(0.12), {CornerRadius = UDim.new(0, 12)}):Play()
-    end)
-    btnKey.MouseLeave:Connect(function()
-        TweenService:Create(bkc, TweenInfo.new(0.12), {CornerRadius = UDim.new(0, 10)}):Play()
-    end)
-
-    btnUsar.MouseEnter:Connect(function()
-        if btnUsar.Text == "Usar Key" then
-            TweenService:Create(btnUsar, TweenInfo.new(0.12), {BackgroundColor3 = C_NEON_H}):Play()
-        end
-    end)
-    btnUsar.MouseLeave:Connect(function()
-        if btnUsar.Text == "Usar Key" then
-            TweenService:Create(btnUsar, TweenInfo.new(0.12), {BackgroundColor3 = C_NEON}):Play()
-        end
-    end)
-
-    btnObter.MouseEnter:Connect(function()
-        TweenService:Create(btnObter, TweenInfo.new(0.12), {BackgroundColor3 = C_GHOST_H}):Play()
-        TweenService:Create(bos, TweenInfo.new(0.12), {Color = C_NEON}):Play()
-    end)
-    btnObter.MouseLeave:Connect(function()
-        TweenService:Create(btnObter, TweenInfo.new(0.12), {BackgroundColor3 = C_GHOST}):Play()
-        TweenService:Create(bos, TweenInfo.new(0.12), {Color = C_STROKE_HI}):Play()
-    end)
-
     playOpenSound()
 
-    return gui, card, screen1, screen2, tb, tbs, btnFree, btnKey,
-           btnUsar, btnObter, btnVoltar, bos, dot, dotShadow, statusText
+    return gui, card, screen1, screen2, tb, btnFree, btnKey,
+           btnUsar, btnObter, btnVoltar, statusText, closeBtn, popup, btnSim, btnNao
 end
 
 --=====================================================================
--- BOOT: TELA DE LOADING -> CARD DE KEY
---=====================================================================
-local loadGui, barFill, pct, center, logoLbl, subLbl = criarLoadingScreen()
-playOpenSound()
-
--- Animação da barra (4.2s total)
-local totalTime = 4.2
-local startT = tick()
-local doneLoading = false
-
-task.spawn(function()
-    while not doneLoading do
-        local elapsed = tick() - startT
-        local progress = math.clamp(elapsed / totalTime, 0, 1)
-        
-        -- Suaviza a curva (rápido no meio, devagar no fim)
-        local easedProgress = 1 - (1 - progress) * (1 - progress)
-        
-        barFill.Size = UDim2.new(easedProgress, 0, 1, 0)
-        pct.Text = math.floor(easedProgress * 100) .. "%"
-        
-        if progress >= 1 then
-            doneLoading = true
-        end
-        task.wait(0.03)
-    end
-end)
-
-task.wait(totalTime + 0.2)
-
--- Fade out do loading
-local fadeInfo = TweenInfo.new(0.4, Enum.EasingStyle.Quart, Enum.EasingDirection.In)
-for _, obj in ipairs(loadGui:GetDescendants()) do
-    if obj:IsA("TextLabel") then
-        TweenService:Create(obj, fadeInfo, {TextTransparency = 1}):Play()
-    elseif obj:IsA("Frame") then
-        TweenService:Create(obj, fadeInfo, {BackgroundTransparency = 1}):Play()
-    elseif obj:IsA("UIStroke") then
-        TweenService:Create(obj, fadeInfo, {Transparency = 1}):Play()
-    end
-end
-task.wait(0.45)
-loadGui:Destroy()
-
--- Agora abre o card de key
-local gui, card, screen1, screen2, tb, tbs,
+local gui, card, screen1, screen2, tb,
       btnFree, btnKey, btnUsar, btnObter, btnVoltar,
-      bos, dot, dotShadow, statusText = criarCard()
+      statusText, closeBtn, popup, btnSim, btnNao = criarUI()
 
 --=====================================================================
 -- ESTADO
@@ -889,11 +531,6 @@ local function setStatus(txt, color)
     TweenService:Create(statusText, TweenInfo.new(0.15), {TextColor3 = color}):Play()
 end
 
-local function setDot(color)
-    dot.BackgroundColor3 = color
-    dotShadow.Color = color
-end
-
 local function shakeCard()
     local original = card.Position
     task.spawn(function()
@@ -912,27 +549,27 @@ local function trocarTela(tela)
         screen1.Visible = false
         screen2.Visible = true
         setStatus("digite a key", C_MUTED)
-        setDot(C_MUTED)
     else
         screen1.Visible = true
         screen2.Visible = false
-        setStatus("escolha", C_MUTED)
-        setDot(C_DIM)
+        setStatus("escolha uma opção", C_MUTED)
     end
 end
 
 local function fadeOutEDestroy()
-    local fadeOut = TweenInfo.new(0.35, Enum.EasingStyle.Quart, Enum.EasingDirection.In)
-    for _, o in ipairs(card:GetDescendants()) do
+    local fadeOut = TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.In)
+    for _, o in ipairs(gui:GetDescendants()) do
         if o:IsA("TextLabel") or o:IsA("TextButton") or o:IsA("TextBox") then
             TweenService:Create(o, fadeOut, {TextTransparency = 1}):Play()
         elseif o:IsA("Frame") then
             TweenService:Create(o, fadeOut, {BackgroundTransparency = 1}):Play()
+        elseif o:IsA("ImageLabel") then
+            TweenService:Create(o, fadeOut, {ImageTransparency = 1}):Play()
         elseif o:IsA("UIStroke") then
             TweenService:Create(o, fadeOut, {Transparency = 1}):Play()
         end
     end
-    task.wait(0.4)
+    task.wait(0.35)
     gui:Destroy()
 end
 
@@ -946,8 +583,8 @@ local function carregar(url)
 end
 
 local function resetBtn()
-    btnUsar.Text = "Usar Key"
-    btnUsar.TextColor3 = Color3.fromRGB(5, 8, 7)
+    btnUsar.Text = "Validar Key"
+    btnUsar.TextColor3 = Color3.fromRGB(10, 10, 10)
     TweenService:Create(btnUsar, TweenInfo.new(0.15), {BackgroundColor3 = C_NEON}):Play()
 end
 
@@ -966,24 +603,21 @@ local function registrarFalha(motivo)
 
     if tentativas >= MAX_TENTATIVAS then
         setStatus("bloqueado", C_ERR)
-        setDot(C_ERR)
         btnUsar.Text = "Bloqueado"
         TweenService:Create(btnUsar, TweenInfo.new(0.15), {BackgroundColor3 = C_ERR}):Play()
-        btnUsar.TextColor3 = Color3.fromRGB(255, 255, 255)
+        btnUsar.TextColor3 = C_TEXT
         task.wait(1.5)
         kickarPorTentativas()
         return
     end
 
     setStatus(motivo .. " (" .. restantes .. ")", C_ERR)
-    setDot(C_ERR)
     btnUsar.Text = motivo
     TweenService:Create(btnUsar, TweenInfo.new(0.15), {BackgroundColor3 = C_ERR}):Play()
-    btnUsar.TextColor3 = Color3.fromRGB(255, 255, 255)
+    btnUsar.TextColor3 = C_TEXT
     task.wait(2)
     resetBtn()
     setStatus("digite a key", C_MUTED)
-    setDot(C_MUTED)
 end
 
 --=====================================================================
@@ -997,12 +631,10 @@ local function validarKey()
         playError()
         shakeCard()
         setStatus("digite uma key", C_ERR)
-        setDot(C_ERR)
-        TweenService:Create(tbs, TweenInfo.new(0.15), {Color = C_ERR}):Play()
+        TweenService:Create(tb, TweenInfo.new(0.15), {BackgroundColor3 = C_ERR}):Play()
         task.wait(1.5)
         setStatus("digite a key", C_MUTED)
-        setDot(C_MUTED)
-        TweenService:Create(tbs, TweenInfo.new(0.15), {Color = C_STROKE}):Play()
+        TweenService:Create(tb, TweenInfo.new(0.15), {BackgroundColor3 = C_ELEMENT}):Play()
         return
     end
 
@@ -1012,22 +644,19 @@ local function validarKey()
         playError()
         shakeCard()
         setStatus("formato invalido", C_ERR)
-        setDot(C_ERR)
-        TweenService:Create(tbs, TweenInfo.new(0.15), {Color = C_ERR}):Play()
+        TweenService:Create(tb, TweenInfo.new(0.15), {BackgroundColor3 = C_ERR}):Play()
         task.wait(1.8)
         setStatus("digite a key", C_MUTED)
-        setDot(C_MUTED)
-        TweenService:Create(tbs, TweenInfo.new(0.15), {Color = C_STROKE}):Play()
+        TweenService:Create(tb, TweenInfo.new(0.15), {BackgroundColor3 = C_ELEMENT}):Play()
         return
     end
 
     validando = true
     playClick()
-    setStatus("verificando", C_WARN)
-    setDot(C_WARN)
+    setStatus("verificando", C_MUTED)
     btnUsar.Text = "Verificando..."
     btnUsar.TextColor3 = C_MUTED
-    TweenService:Create(btnUsar, TweenInfo.new(0.15), {BackgroundColor3 = C_GHOST}):Play()
+    TweenService:Create(btnUsar, TweenInfo.new(0.15), {BackgroundColor3 = C_ELEMENT}):Play()
 
     local url = API_URL .. "/validate?key=" .. HttpService:UrlEncode(key)
         .. "&username=" .. HttpService:UrlEncode(LocalPlayer.Name)
@@ -1039,7 +668,7 @@ local function validarKey()
         validando = false
         btnUsar.Text = "Tempo esgotado"
         TweenService:Create(btnUsar, TweenInfo.new(0.15), {BackgroundColor3 = C_ERR}):Play()
-        btnUsar.TextColor3 = Color3.fromRGB(255, 255, 255)
+        btnUsar.TextColor3 = C_TEXT
         task.wait(1.5)
         registrarFalha("sem resposta")
         return
@@ -1049,7 +678,7 @@ local function validarKey()
         validando = false
         btnUsar.Text = "Sem conexão"
         TweenService:Create(btnUsar, TweenInfo.new(0.15), {BackgroundColor3 = C_ERR}):Play()
-        btnUsar.TextColor3 = Color3.fromRGB(255, 255, 255)
+        btnUsar.TextColor3 = C_TEXT
         task.wait(1.5)
         registrarFalha("sem conexao")
         return
@@ -1060,7 +689,7 @@ local function validarKey()
         validando = false
         btnUsar.Text = "Erro"
         TweenService:Create(btnUsar, TweenInfo.new(0.15), {BackgroundColor3 = C_ERR}):Play()
-        btnUsar.TextColor3 = Color3.fromRGB(255, 255, 255)
+        btnUsar.TextColor3 = C_TEXT
         task.wait(1.5)
         registrarFalha("resposta invalida")
         return
@@ -1072,9 +701,9 @@ local function validarKey()
         validando = false
         playSuccess()
         setStatus("autenticado", C_NEON)
-        setDot(C_NEON)
         btnUsar.Text = "Autenticado"
         TweenService:Create(btnUsar, TweenInfo.new(0.15), {BackgroundColor3 = C_NEON}):Play()
+        btnUsar.TextColor3 = Color3.fromRGB(10, 10, 10)
         task.wait(0.8)
         fadeOutEDestroy()
         task.wait(0.1)
@@ -1105,8 +734,7 @@ end)
 
 btnFree.MouseButton1Click:Connect(function()
     playClick()
-    setStatus("entrando free", C_WARN)
-    setDot(C_WARN)
+    setStatus("entrando free", C_MUTED)
     fadeOutEDestroy()
     task.wait(0.1)
     carregar(URL_FREE)
@@ -1123,12 +751,12 @@ btnVoltar.MouseButton1Click:Connect(function()
 end)
 
 btnUsar.MouseButton1Click:Connect(function()
-    if btnUsar.Text ~= "Usar Key" then return end
+    if btnUsar.Text ~= "Validar Key" then return end
     validarKey()
 end)
 
 tb.FocusLost:Connect(function(enterPressed)
-    if enterPressed and btnUsar.Text == "Usar Key" then
+    if enterPressed and btnUsar.Text == "Validar Key" then
         validarKey()
     end
 end)
@@ -1139,22 +767,35 @@ btnObter.MouseButton1Click:Connect(function()
     if type(openbrowser) == "function" then
         local ok = pcall(openbrowser, url)
         if ok then
-            setStatus("abrindo...", C_WARN)
-            setDot(C_WARN)
+            setStatus("abrindo...", C_MUTED)
             task.wait(1.5)
             setStatus("digite a key", C_MUTED)
-            setDot(C_MUTED)
             return
         end
     end
     if setclipboard then
         pcall(setclipboard, url)
         setStatus("link copiado", C_NEON)
-        setDot(C_NEON)
-        TweenService:Create(bos, TweenInfo.new(0.15), {Color = C_NEON}):Play()
         task.wait(1.6)
         setStatus("digite a key", C_MUTED)
-        setDot(C_MUTED)
-        TweenService:Create(bos, TweenInfo.new(0.15), {Color = C_STROKE_HI}):Play()
     end
+end)
+
+-- EVENTO DO BOTÃO X (ABRE O POPUP)
+closeBtn.MouseButton1Click:Connect(function()
+    playClick()
+    popup.Visible = true
+end)
+
+-- AÇÃO DO SIM (FECHA)
+btnSim.MouseButton1Click:Connect(function()
+    playClick()
+    popup.Visible = false
+    fadeOutEDestroy()
+end)
+
+-- AÇÃO DO NÃO (CANCELA)
+btnNao.MouseButton1Click:Connect(function()
+    playClick()
+    popup.Visible = false
 end)
